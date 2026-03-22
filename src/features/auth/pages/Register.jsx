@@ -2,6 +2,8 @@ import { useState } from 'react'
 import {  Link } from 'react-router-dom'
 import { useNavigate } from 'react-router-dom'
 import {useAuth} from "../hooks/useAuth"
+import '../auth.form.scss'
+import "../../../style/button.scss"
 
 const Register = () => {
     const navigate=useNavigate();
@@ -22,7 +24,7 @@ const Register = () => {
         return (<main><h1>Loading...</h1></main>)
     }
   return (
-    <main>
+        <main className='auth-page'>
         <div className="form-container"> 
             <h1>Register</h1>
             <form onSubmit={handlesubmit}>

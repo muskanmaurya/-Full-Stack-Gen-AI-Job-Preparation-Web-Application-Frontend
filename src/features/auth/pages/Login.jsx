@@ -25,7 +25,7 @@ const Login = () => {
         return (<main><h1>Loading...</h1></main>)
     }
   return (
-    <main className='bg-amber-300'>
+        <main className='auth-page'>
         <div className="form-container"> 
             <h1>Login</h1>
             <form onSubmit={handlesubmit}>
