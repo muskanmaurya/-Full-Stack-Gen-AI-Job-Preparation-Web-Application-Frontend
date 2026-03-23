@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api=axios.create({
-    baseURL:"http://localhost:5000",
+    baseURL:"http://localhost:3000",
     withCredentials:true,
 })
 
@@ -13,15 +13,13 @@ export const generateInterviewReport=async({jobDescription, selfDescription, res
 
     const formData=new FormData();  //to send file data from frontend to backend we have to use form data
 
-    formData.append("JobDescription",jobDescription);
+    formData.append("jobDescription",jobDescription);
     formData.append("selfDescription",selfDescription);
-    formData.append("resume",resumeFile);
+    if (resumeFile) {
+        formData.append("resume",resumeFile);
+    }
 
-    const response = await api.post("/api/interview/", FormData,{
-        headers:{
-            "Content-type":"multipart/form-data"
-        }
-    })
+    const response = await api.post("/api/interview", formData)
 
     return response.data;
 

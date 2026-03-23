@@ -1,9 +1,23 @@
 .auth-page {
+    $bg-page: #0d1117;
+    $bg-card: #161b22;
+    $bg-panel: #1c2230;
+    $bg-input: #1e2535;
+    $border-color: #2a3348;
+    $text-primary: #e6edf3;
+    $text-muted: #7d8590;
+    $accent: #ff2d78;
+    $accent-alt: #ff6b9d;
+    $badge-required: #ff2d78;
+    $badge-best: #ff2d78;
+    $info-bg: #1b2a4a;
+    $info-border: #2d4a7a;
+
     min-height: 100vh;
     width: 100%;
     padding: 16px;
     box-sizing: border-box;
-    background: #111418;
+    background: $bg-page;
 
     display: flex;
     justify-content: center;
@@ -15,8 +29,8 @@
         display: flex;
         flex-direction: column;
         gap: 12px;
-        background: #1b2028;
-        border: 1px solid #303745;
+        background: $bg-card;
+        border: 1px solid $border-color;
         border-radius: 10px;
         padding: 18px;
         box-sizing: border-box;
@@ -25,7 +39,7 @@
     h1 {
         margin: 0;
         text-align: center;
-        color: #e6e9ef;
+        color: $text-primary;
         font-size: 24px;
         font-weight: 700;
     }
@@ -42,23 +56,23 @@
         gap: 6px;
 
         label {
-            color: #e6e9ef;
+            color: $text-primary;
             font-size: 14px;
             font-weight: 600;
         }
 
         input {
-            border: 1px solid #465062;
+            border: 1px solid $border-color;
             outline: none;
             padding: 10px;
             border-radius: 8px;
-            background: #131821;
-            color: #e9edf3;
+            background: $bg-input;
+            color: $text-primary;
             font-size: 14px;
         }
 
         input::placeholder {
-            color: #a7afbd;
+            color: $text-muted;
         }
     }
 
@@ -69,20 +83,20 @@
         border-radius: 8px;
 
         &.primary-button {
-            background: #3273dc;
+            background: $accent;
             color: #fff;
         }
     }
 
     p {
         margin: 6px 0 0;
-        color: #c5ccda;
+        color: $text-muted;
         text-align: center;
         font-size: 14px;
     }
 
     a {
-        color: #6ea4ff;
+        color: $accent-alt;
         text-decoration: none;
         margin-left: 6px;
     }
