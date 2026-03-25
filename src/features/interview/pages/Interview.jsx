@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import "../styles/interview.scss";
-import { useInterview } from "../../auth/hooks/useInterview";
+import { useInterview } from "../hooks/useInterview.js";
 import { useParams } from "react-router-dom";
 import { useAuth } from "../../auth/hooks/useAuth";
 import { useNavigate } from "react-router-dom";

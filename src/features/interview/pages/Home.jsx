@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import "../styles/home.scss"
-import {useInterview} from "../../auth/hooks/useInterview.js"
+import {useInterview} from "../hooks/useInterview.js"
 import { useAuth } from '../../auth/hooks/useAuth.js';
 import { useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
