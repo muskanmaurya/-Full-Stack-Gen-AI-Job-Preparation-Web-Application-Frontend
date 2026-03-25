@@ -1,8 +1,20 @@
 import axios from "axios";
 
+const GUEST_TOKEN_KEY = "temporary_guest_token";
+
 const api=axios.create({
     baseURL:"http://localhost:3000",
     withCredentials:true,
+})
+
+api.interceptors.request.use((config) => {
+    const guestToken = sessionStorage.getItem(GUEST_TOKEN_KEY);
+
+    if (guestToken) {
+        config.headers["x-guest-token"] = guestToken;
+    }
+
+    return config;
 })
 
 
@@ -44,3 +56,14 @@ export const getAllInterviewReports= async()=>{
     return response.data;
 }
 
+/**
+ * @description Service to generate resume pdf based on user self description, resume content and job description.
+ */
+
+export const generateResumePdf=async({interviewReportId})=>{
+    const response = await api.post(`/api/interview/resume/pdf/${interviewReportId}`,null,{
+        responseType:"blob",
+    })
+
+    return response;
+}

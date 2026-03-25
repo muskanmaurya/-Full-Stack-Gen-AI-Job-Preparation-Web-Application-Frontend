@@ -29,6 +29,7 @@ $severity-low: #3fb950;
     align-items: stretch;
     padding: 1.5rem;
     box-sizing: border-box;
+    position: relative;
 }
 
 // ── 3-Column Layout ───────────────────────────────────────────────────────────
@@ -404,7 +405,11 @@ $severity-low: #3fb950;
         }
 
         &.score--low {
-            border-color: $severity-high;
+            border-color: #ff8a3d;
+        }
+
+        &.score--none {
+            border-color: #8b949e;
         }
     }
 
@@ -424,8 +429,24 @@ $severity-low: #3fb950;
     &__sub {
         margin: 0;
         font-size: 0.75rem;
-        color: $severity-low;
+        color: $text-muted;
         text-align: center;
+
+        &.score--high {
+            color: $severity-low;
+        }
+
+        &.score--mid {
+            color: $severity-medium;
+        }
+
+        &.score--low {
+            color: #ff8a3d;
+        }
+
+        &.score--none {
+            color: #8b949e;
+        }
     }
 }
 
@@ -444,37 +465,97 @@ $severity-low: #3fb950;
         margin: 0;
     }
 
-    &__list {
+    &__table-wrap {
+        border: 1px solid $border-color;
+        border-radius: 0.5rem;
+        overflow-y: auto;
+        max-height: 270px;
+        background-color: rgba($bg-panel, 0.75);
+
+        &::-webkit-scrollbar {
+            display: block;
+            width: 6px;
+        }
+
+        &::-webkit-scrollbar-thumb {
+            background-color: rgba($text-muted, 0.45);
+            border-radius: 999px;
+        }
+
+        &::-webkit-scrollbar-track {
+            background-color: rgba($bg-card, 0.5);
+        }
+    }
+
+    &__actions {
         display: flex;
-        flex-wrap: wrap;
-        gap: 0.5rem;
+        justify-content: flex-end;
+
+        .button {
+            min-width: 112px;
+        }
+    }
+
+    &__table {
+        width: 100%;
+        border-collapse: collapse;
+
+        th,
+        td {
+            text-align: left;
+            padding: 0.55rem 0.6rem;
+            border-bottom: 1px solid rgba($border-color, 0.8);
+            font-size: 0.78rem;
+        }
+
+        th {
+            font-size: 0.68rem;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: $text-muted;
+            background-color: rgba($bg-card, 0.7);
+        }
+
+        td {
+            color: lighten($text-muted, 14%);
+            vertical-align: middle;
+        }
+
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
     }
 }
 
-.skill-tag {
-    font-size: 0.775rem;
-    font-weight: 500;
-    padding: 0.3rem 0.7rem;
-    border-radius: 0.4rem;
+.severity-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 70px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    border-radius: 999px;
+    padding: 0.2rem 0.5rem;
     border: 1px solid;
-    cursor: default;
 
     &--high {
         color: $severity-high;
         background-color: rgba($severity-high, 0.1);
-        border-color: rgba($severity-high, 0.25);
+        border-color: rgba($severity-high, 0.3);
     }
 
     &--medium {
         color: $severity-medium;
         background-color: rgba($severity-medium, 0.1);
-        border-color: rgba($severity-medium, 0.25);
+        border-color: rgba($severity-medium, 0.3);
     }
 
     &--low {
         color: $severity-low;
         background-color: rgba($severity-low, 0.1);
-        border-color: rgba($severity-low, 0.25);
+        border-color: rgba($severity-low, 0.3);
     }
 }
 
@@ -578,6 +659,18 @@ $severity-low: #3fb950;
     .interview-sidebar {
         padding: 1rem;
         gap: 1rem;
+    }
+
+    .skill-gaps {
+        &__table-wrap {
+            max-height: 220px;
+        }
+
+        &__actions {
+            .button {
+                width: 100%;
+            }
+        }
     }
 
     .match-score {

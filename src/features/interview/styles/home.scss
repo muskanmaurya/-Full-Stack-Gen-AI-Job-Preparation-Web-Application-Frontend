@@ -28,19 +28,24 @@ $font-stack:     system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Robot
     justify-content: center;
     padding: 3rem 1.5rem;
     gap: 2rem;
+    position: relative;
+}
+
+.page-actions-logout{
+    display: none;
 }
 
 // ── Page Header ──────────────────────────────────────────────────────────────
 .page-header {
     text-align: center;
-
+    
     h1 {
         font-size: 2.25rem;
         font-weight: 700;
         margin-bottom: 0.5rem;
         color: $text-primary;
     }
-
+    
     p {
         color: $text-muted;
         font-size: 0.95rem;
@@ -48,11 +53,12 @@ $font-stack:     system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Robot
         margin: 0 auto;
         line-height: 1.6;
     }
-
+    
     .highlight {
         color: $accent;
     }
 }
+
 
 // ── Main Card ─────────────────────────────────────────────────────────────────
 .interview-card {
@@ -63,18 +69,28 @@ $font-stack:     system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Robot
     border-radius: 1rem;
     overflow: hidden;
 
+    &__topbar {
+        display: flex;
+        justify-content: flex-end;
+        padding: 0.85rem 1rem 0;
+
+        .button {
+            min-width: 112px;
+        }
+    }
+    
     &__body {
         display: flex;
         min-height: 520px;
     }
-
+    
     &__footer {
         display: flex;
         align-items: center;
         justify-content: space-between;
         padding: 1rem 1.5rem;
         border-top: 1px solid $border-color;
-
+        
         .footer-info {
             font-size: 0.8rem;
             color: $text-muted;
@@ -447,6 +463,14 @@ $font-stack:     system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Robot
 
     .interview-card {
         border-radius: 0.75rem;
+
+        &__topbar {
+            padding: 0.75rem 0.75rem 0;
+
+            .button {
+                width: 100%;
+            }
+        }
 
         &__footer {
             padding: 0.85rem 1rem;

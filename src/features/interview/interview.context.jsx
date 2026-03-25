@@ -8,9 +8,15 @@ export const InterviewProvider = ({children})=>{  // Create a provider component
     const [report,setReport]= useState(null);
     const [reports,setReports] = useState([])
 
+    const resetInterviewState = () => {
+        setReport(null);
+        setReports([]);
+        setLoading(false);
+    }
+
     return (
         //* Provide the loading state, current report, and list of reports to any child components that consume this context */
-        <InterviewContext.Provider value={{loading,setLoading,report,setReport,reports,setReports}}>  
+        <InterviewContext.Provider value={{loading,setLoading,report,setReport,reports,setReports,resetInterviewState}}>  
             {children}
         </InterviewContext.Provider>
     )

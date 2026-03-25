@@ -7,11 +7,12 @@ import { createContext, useState } from "react";
 
     const [user,setUser]=useState(null);
     const [loading,setLoading]=useState(true);
+    const [isGuestSession,setIsGuestSession]=useState(false);
 
     
 
     return(
-        <AuthContext.Provider value={{user, setUser, loading, setLoading}}>
+        <AuthContext.Provider value={{user, setUser, loading, setLoading, isGuestSession, setIsGuestSession}}>
             {children}
         </AuthContext.Provider>
     )

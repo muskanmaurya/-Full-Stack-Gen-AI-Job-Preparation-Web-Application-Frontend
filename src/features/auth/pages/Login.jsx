@@ -9,7 +9,7 @@ import { useNavigate } from 'react-router-dom'
 
 const Login = () => {
 
-    const {loading,handleLogin} = useAuth();
+    const {loading,handleLogin,handleGuestLogin} = useAuth();
     const navigate=useNavigate();
 
     const [email, setEmail] = useState("");
@@ -18,6 +18,11 @@ const Login = () => {
     const handlesubmit = async (e) => {
         e.preventDefault()
         await handleLogin({email,password});
+        navigate("/");
+    }
+
+    const handleGuestSubmit = async () => {
+        await handleGuestLogin();
         navigate("/");
     }
 
@@ -43,6 +48,8 @@ const Login = () => {
                 </div>
                 <button className='button primary-button'>Login</button>
             </form>
+            <button onClick={handleGuestSubmit} className='button secondary-button'>Continue as Guest</button>
+            <p>Guest mode is temporary and does not save any data.</p>
             <p>Don't have an account?<Link to="/register">Register</Link></p>
 
         </div>

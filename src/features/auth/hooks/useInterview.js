@@ -1,12 +1,15 @@
-import {getAllInterviewReports,getInterviewReportById,generateInterviewReport} from "../services/interview.api.js"
-import {useContext} from "react"
+import {getAllInterviewReports,getInterviewReportById,generateInterviewReport,generateResumePdf} from "../services/interview.api.js"
+import {useContext,useEffect} from "react"
+import { useCallback } from "react";
 import {InterviewContext} from "../../interview/interview.context.jsx" 
+import { useParams } from "react-router-dom"
 // import { useNavigate } from "react-router-dom"
 
 export const useInterview = () =>{
 
     const context=useContext(InterviewContext)  // Access the context value using useContext hook
     // const navigate = useNavigate();  // Access the navigate function using useNavigate hook
+    const {interviewId}= useParams();
 
     if(!context){
         throw new Error("useInterview must be used within an InterviewProvider")
@@ -48,7 +51,7 @@ export const useInterview = () =>{
         return response?.interviewReport || null;
     }
 
-    const getReports = async()=>{
+    const getReports = useCallback(async()=>{
         setLoading(true);
         let response =null;
         try {
@@ -64,9 +67,73 @@ export const useInterview = () =>{
         }
 
         return response?.interviewReports || [];
+    }, [setLoading, setReports])
+
+    const getResumePdf = async(interviewReportId)=>{
+        if (!interviewReportId) {
+            alert("Interview report id is missing. Please regenerate the report and try again.");
+            return;
+        }
+
+        setLoading(true);
+        try {
+            const response = await generateResumePdf({interviewReportId})
+            const contentDisposition = response?.headers?.["content-disposition"] || "";
+
+            const filenameMatch = contentDisposition.match(/filename\*?=(?:UTF-8''|")?([^";\n]+)/i);
+            const filename = filenameMatch?.[1] ? decodeURIComponent(filenameMatch[1]) : `resume_${interviewReportId}.pdf`;
+
+            const blob = response.data instanceof Blob
+                ? response.data
+                : new Blob([response.data], { type: "application/pdf" });
+            const url = window.URL.createObjectURL(blob)
+            const link=document.createElement("a")
+            link.href=url;
+            link.setAttribute("download", filename)
+            link.style.display = "none";
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            window.URL.revokeObjectURL(url);
+        } catch (error) {
+            console.error("Error generating resume PDF:", error);
+            alert("Unable to download resume right now. Please try again.");
+        } finally {
+            setLoading(false);
+        }
     }
 
-    return {loading, report, reports, generateReport, getReportById, getReports}
+    useEffect(()=>{
+        let isMounted = true;
+
+        const loadReport = async () => {
+            if (!interviewId) {
+                return;
+            }
+
+            setLoading(true);
+            try {
+                const response = await getInterviewReportById(interviewId);
+                if (isMounted) {
+                    setReport(response.interviewReport);
+                }
+            } catch (error) {
+                console.log("error in useInterview: ", error);
+            } finally {
+                if (isMounted) {
+                    setLoading(false);
+                }
+            }
+        }
+
+        loadReport();
+
+        return () => {
+            isMounted = false;
+        }
+    },[interviewId,setLoading,setReport,setReports])
+
+    return {loading, report, reports, generateReport, getReportById, getReports, getResumePdf}
 
 }
 

@@ -1,14 +1,17 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import "../styles/home.scss"
 import {useInterview} from "../../auth/hooks/useInterview.js"
+import { useAuth } from '../../auth/hooks/useAuth.js';
 import { useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const Home = () => {
 
     const navigate = useNavigate();
+    const {user,handleLogout} = useAuth();
+    const showLogout = Boolean(user && !user.isGuest);
 
-  const {loading,generateReport, reports}= useInterview();  // Destructure the functions and state from the custom hook
+    const {loading,generateReport, reports, getReports}= useInterview();  // Destructure the functions and state from the custom hook
   
   const [jobDescription, setJobDescription] = useState("")  
   const [selfDescription, setSelfDescription] = useState("")  
@@ -34,6 +37,21 @@ const Home = () => {
     }
   }
 
+    const handleLogoutClick = async () => {
+        await handleLogout();
+        navigate('/login', { replace: true });
+    }
+
+    useEffect(() => {
+        if (user?.isGuest) {
+            return;
+        }
+
+        getReports().catch((error) => {
+            console.error("Failed to fetch previous interview reports:", error.message || error);
+        });
+    }, [getReports, user?.id, user?.isGuest]);
+
   if(loading){
     return (
             <main className='loading-screen'>
@@ -51,7 +69,6 @@ const Home = () => {
 
   return (
         <div className='home-page'>
-
             {/* Page Header */}
             <header className='page-header'>
                 <h1>Create Your Custom <span className='highlight'>Interview Plan</span></h1>
@@ -60,6 +77,11 @@ const Home = () => {
 
             {/* Main Card */}
             <div className='interview-card'>
+                {showLogout && (
+                    <div className='interview-card__topbar'>
+                        <button onClick={handleLogoutClick} className='button secondary-button'>Logout</button>
+                    </div>
+                )}
                 <div className='interview-card__body'>
 
                     {/* Left Panel - Job Description */}
