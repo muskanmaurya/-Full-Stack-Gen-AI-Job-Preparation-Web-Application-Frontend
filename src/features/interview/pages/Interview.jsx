@@ -1,8 +1,8 @@
 import React, { useEffect, useMemo, useState } from "react";
 import "../styles/interview.scss";
-import { useInterview } from "../hooks/useInterview.js";
+import { useInterview } from "../../interview/hooks/useInterview.js";
 import { useParams } from "react-router-dom";
-import { useAuth } from "../../auth/hooks/useAuth";
+import { useAuth } from "../../auth/hooks/useAuth.js";
 import { useNavigate } from "react-router-dom";
 
 const NAV_ITEMS = [
