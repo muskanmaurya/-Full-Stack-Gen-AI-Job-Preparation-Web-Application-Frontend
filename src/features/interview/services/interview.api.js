@@ -18,7 +18,6 @@ api.interceptors.request.use((config) => {
     return config;
 })
 
-
 /**
  * @description service to generate interview report by sending job description, self description and resume file to the backend
  */
