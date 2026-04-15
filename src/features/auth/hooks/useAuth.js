@@ -19,10 +19,8 @@ export const useAuth=()=>{
             setUser(data.user);
             setIsGuestSession(false);
         } catch (error) {
-            console.log("error in handleLogin context: ",error)
-            
+            console.log("error in handleLogin context: ",error)           
         }finally{
-
             setLoading(false);
         }
     }
