@@ -77,7 +77,15 @@ export const useInterview = () =>{
 
         setLoading(true);
         try {
-            const response = await generateResumePdf({interviewReportId})
+            const resumePayload = report
+                ? {
+                    resume: report.resume,
+                    selfDescription: report.selfDescription,
+                    jobDescription: report.jobDescription,
+                }
+                : null;
+
+            const response = await generateResumePdf({interviewReportId, resumePayload})
             const contentDisposition = response?.headers?.["content-disposition"] || "";
 
             const filenameMatch = contentDisposition.match(/filename\*?=(?:UTF-8''|")?([^";\n]+)/i);
@@ -97,7 +105,8 @@ export const useInterview = () =>{
             window.URL.revokeObjectURL(url);
         } catch (error) {
             console.error("Error generating resume PDF:", error);
-            alert("Unable to download resume right now. Please try again.");
+            const apiMessage = error?.response?.data?.message;
+            alert(apiMessage || "Unable to download resume right now. Please try again.");
         } finally {
             setLoading(false);
         }
