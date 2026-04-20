@@ -99,10 +99,13 @@ export const useAuth=()=>{
 
             try {     
                 const data=await getMe();
-                setUser(data.user);
+                setUser(data?.user ?? null);
                 setIsGuestSession(false);
             } catch (error) {
-                console.log("error in useAuth: ",error)
+                const status = error?.response?.status;
+                if (status !== 401) {
+                    console.log("error in useAuth: ",error)
+                }
                 setUser(null);
             } finally{
                 setLoading(false);

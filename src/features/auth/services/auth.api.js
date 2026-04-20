@@ -18,6 +18,7 @@ export async function register({username,email,password}){
         return response.data;
     } catch (error) {
         console.log("Error in register function in authapi: ", error)
+        throw error;
     }
 }
 
@@ -32,7 +33,7 @@ export async function login({email,password}){
         return response.data;
     } catch (error) {
         console.log("Error in login function in authapi: ", error)
-        
+        throw error;
     }
 }
 
@@ -43,7 +44,7 @@ export async function logout(){
         return response.data;
     } catch (error) {
         console.log("Error in logout function in authapi: ", error)
-        
+        throw error;
     }
 }
 
@@ -53,7 +54,6 @@ export async function getMe(){
         return response.data;
         
     } catch (error) {
-        console.log("Error in getMe function in authapi: ", error);
-        
+        throw error;
     }
 }
