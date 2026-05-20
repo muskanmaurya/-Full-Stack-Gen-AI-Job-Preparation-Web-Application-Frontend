@@ -1,12 +1,18 @@
 import{useAuth} from "../hooks/useAuth"
 import { Navigate, useLocation } from "react-router-dom";
+import LoadingScreen from '../../../components/LoadingScreen.jsx'
 
 const Protected = ({children}) => {
     const {loading,user}=useAuth();
     const location = useLocation();
 
     if(loading){
-        return (<main><h1>Loading...</h1></main>)
+        return (
+            <LoadingScreen
+                title="Checking your access..."
+                subtitle="Making sure your session and interview tools are ready."
+            />
+        )
     }
 
     if(!user){

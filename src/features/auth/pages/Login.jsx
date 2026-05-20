@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom'
 import {useAuth} from "../hooks/useAuth"
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import LoadingScreen from '../../../components/LoadingScreen.jsx'
 
 
 const Login = () => {
@@ -27,7 +28,12 @@ const Login = () => {
     }
 
     if(loading){
-        return (<main><h1>Loading...</h1></main>)
+        return (
+            <LoadingScreen
+                title="Signing you in..."
+                subtitle="Setting up your dashboard and checking your account state."
+            />
+        )
     }
   return (
         <main className='auth-page'>

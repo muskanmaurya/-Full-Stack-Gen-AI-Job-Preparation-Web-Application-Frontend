@@ -4,6 +4,7 @@ import { useInterview } from "../../interview/hooks/useInterview.js";
 import { useParams } from "react-router-dom";
 import { useAuth } from "../../auth/hooks/useAuth.js";
 import { useNavigate } from "react-router-dom";
+import LoadingScreen from '../../../components/LoadingScreen.jsx'
 
 const NAV_ITEMS = [
   // Navigation items for the interview report sections
@@ -69,18 +70,49 @@ const NAV_ITEMS = [
 
 const toText = (value) => {
   if (value === null || value === undefined) return "";
-  return String(value).trim();
+  let str = String(value).trim();
+  
+  // High-performance defensive pass: strip nested recursive JSON noise if present
+  str = str
+    .replace(/^question\\":\s*\\"/i, "")
+    .replace(/^question":\s*"/i, "")
+    .replace(/^intention\\":\s*\\"/i, "")
+    .replace(/^intention":\s*"/i, "")
+    .replace(/^answer\\":\s*\\"/i, "")
+    .replace(/^answer":\s*"/i, "")
+    .replace(/^skill\\":\s*\\"/i, "")
+    .replace(/^skill":\s*"/i, "")
+    .replace(/^day\\":\s*/i, "")
+    .replace(/^focus\\":\s*\\"/i, "")
+    .replace(/^focus":\s*"/i, "")
+    .replace(/^tasks\\":\s*/i, "");
+
+  // Strip any trailing broken JSON characters or escaped quotes
+  str = str.replace(/\\"/g, '"').replace(/^"/, '').replace(/"$/, '').trim();
+  
+  return str;
 };
 
-const cleanTaskList = (tasks) =>
-  (Array.isArray(tasks) ? tasks : [tasks])
+const cleanTaskList = (tasks) => {
+  const rawArray = Array.isArray(tasks) ? tasks : [tasks];
+  
+  return rawArray
     .map((task) => toText(task))
     .filter(Boolean)
+    .map(task => {
+      // If the AI accidentally dumped a whole object string inside a single task array element
+      if (task.includes('"tasks":[')) {
+        const extracted = task.split('"tasks":[').pop();
+        if (extracted) return extracted.replace(/[\]\}]+$/, '').trim();
+      }
+      return task;
+    })
     .filter((task) => {
       const token = task.toLowerCase();
-      if (["day", "focus", "tasks"].includes(token)) return false;
+      if (token.startsWith("day") || token.startsWith("focus")) return false;
       return !/^\d+$/.test(task);
     });
+};
 
 const parseQuestionTokenArray = (tokens) => {
   if (!Array.isArray(tokens)) return [];
@@ -556,9 +588,10 @@ const Interview = () => {
 
   if (loading || !report) {
     return (
-      <main className="loading-screen">
-        <h1>Loading your interview plan...</h1>
-      </main>
+      <LoadingScreen
+        title="Loading your interview plan..."
+        subtitle="Pulling together your report and readying the detailed breakdown."
+      />
     );
   }
 

@@ -4,6 +4,7 @@ import {useInterview} from "../../interview/hooks/useInterview.js";
 import { useAuth } from '../../auth/hooks/useAuth.js';
 import { useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import LoadingScreen from '../../../components/LoadingScreen.jsx'
 
 const Home = () => {
 
@@ -54,9 +55,10 @@ const Home = () => {
 
   if(loading){
     return (
-            <main className='loading-screen'>
-                <h1>Loading your interview plan...</h1>
-            </main>
+            <LoadingScreen
+                title="Building your interview plan..."
+                subtitle="We are analyzing the role, your profile, and past reports."
+            />
         )
   }
 

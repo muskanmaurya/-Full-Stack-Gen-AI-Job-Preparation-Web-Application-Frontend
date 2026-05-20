@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import {useAuth} from "../hooks/useAuth"
 import '../auth.form.scss'
 import "../../../style/button.scss"
+import LoadingScreen from '../../../components/LoadingScreen.jsx'
 
 const Register = () => {
     const navigate=useNavigate();
@@ -21,7 +22,12 @@ const Register = () => {
     }
 
     if(loading){
-        return (<main><h1>Loading...</h1></main>)
+        return (
+            <LoadingScreen
+                title="Creating your account..."
+                subtitle="A quick sec while we prepare your interview workspace."
+            />
+        )
     }
 
     if (user?.isGuest) {
