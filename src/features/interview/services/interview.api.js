@@ -1,7 +1,9 @@
 import axios from "axios";
 
 const GUEST_TOKEN_KEY = "temporary_guest_token";
-const API_BASE_URL = "https://full-stack-gen-ai-job-preparation-web.onrender.com";
+const API_BASE_URL = import.meta.env.DEV
+    ? (import.meta.env.VITE_API_BASE_URL_DEV || "http://localhost:3000")
+    : (import.meta.env.VITE_API_BASE_URL || "https://full-stack-gen-ai-job-preparation-web.onrender.com");
 
 const api=axios.create({
     baseURL:API_BASE_URL,

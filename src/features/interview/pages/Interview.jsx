@@ -68,223 +68,190 @@ const NAV_ITEMS = [
   },
 ];
 
-// const toText = (value) => {
-//   if (value === null || value === undefined) return "";
-//   let str = String(value).trim();
-  
-//   // High-performance defensive pass: strip nested recursive JSON noise if present
-//   str = str
-//     .replace(/^question\\":\s*\\"/i, "")
-//     .replace(/^question":\s*"/i, "")
-//     .replace(/^intention\\":\s*\\"/i, "")
-//     .replace(/^intention":\s*"/i, "")
-//     .replace(/^answer\\":\s*\\"/i, "")
-//     .replace(/^answer":\s*"/i, "")
-//     .replace(/^skill\\":\s*\\"/i, "")
-//     .replace(/^skill":\s*"/i, "")
-//     .replace(/^day\\":\s*/i, "")
-//     .replace(/^focus\\":\s*\\"/i, "")
-//     .replace(/^focus":\s*"/i, "")
-//     .replace(/^tasks\\":\s*/i, "");
-
-//   // Strip any trailing broken JSON characters or escaped quotes
-//   str = str.replace(/\\"/g, '"').replace(/^"/, '').replace(/"$/, '').trim();
-  
-//   return str;
-// };
-
 const toText = (value) => {
   if (value === null || value === undefined) return "";
-  return String(value).trim();
+  let str = String(value).trim();
+  
+  // High-performance defensive pass: strip nested recursive JSON noise if present
+  str = str
+    .replace(/^question\\":\s*\\"/i, "")
+    .replace(/^question":\s*"/i, "")
+    .replace(/^intention\\":\s*\\"/i, "")
+    .replace(/^intention":\s*"/i, "")
+    .replace(/^answer\\":\s*\\"/i, "")
+    .replace(/^answer":\s*"/i, "")
+    .replace(/^skill\\":\s*\\"/i, "")
+    .replace(/^skill":\s*"/i, "")
+    .replace(/^day\\":\s*/i, "")
+    .replace(/^focus\\":\s*\\"/i, "")
+    .replace(/^focus":\s*"/i, "")
+    .replace(/^tasks\\":\s*/i, "");
+
+  // Strip any trailing broken JSON characters or escaped quotes
+  str = str.replace(/\\"/g, '"').replace(/^"/, '').replace(/"$/, '').trim();
+  
+  return str;
 };
 
-// const cleanTaskList = (tasks) => {
-//   const rawArray = Array.isArray(tasks) ? tasks : [tasks];
+const cleanTaskList = (tasks) => {
+  const rawArray = Array.isArray(tasks) ? tasks : [tasks];
   
-//   return rawArray
-//     .map((task) => toText(task))
-//     .filter(Boolean)
-//     .map(task => {
-//       // If the AI accidentally dumped a whole object string inside a single task array element
-//       if (task.includes('"tasks":[')) {
-//         const extracted = task.split('"tasks":[').pop();
-//         if (extracted) return extracted.replace(/[\]\}]+$/, '').trim();
-//       }
-//       return task;
-//     })
-//     .filter((task) => {
-//       const token = task.toLowerCase();
-//       if (token.startsWith("day") || token.startsWith("focus")) return false;
-//       return !/^\d+$/.test(task);
-//     });
-// };
-
-const cleanTaskList = (tasks) =>
-  (Array.isArray(tasks) ? tasks : [tasks])
+  return rawArray
     .map((task) => toText(task))
-    .filter(Boolean);
+    .filter(Boolean)
+    .map(task => {
+      // If the AI accidentally dumped a whole object string inside a single task array element
+      if (task.includes('"tasks":[')) {
+        const extracted = task.split('"tasks":[').pop();
+        if (extracted) return extracted.replace(/[\]\}]+$/, '').trim();
+      }
+      return task;
+    })
+    .filter((task) => {
+      const token = task.toLowerCase();
+      if (token.startsWith("day") || token.startsWith("focus")) return false;
+      return !/^\d+$/.test(task);
+    });
+};
+
+const parseQuestionTokenArray = (tokens) => {
+  if (!Array.isArray(tokens)) return [];
+
+  const normalized = [];
+  let current = { question: "", intention: "", answer: "" };
+
+  for (let i = 0; i < tokens.length; i += 1) {
+    const rawKey = toText(tokens[i]).toLowerCase();
+    const value = toText(tokens[i + 1]);
+
+    if (!["question", "intention", "answer"].includes(rawKey)) continue;
+    if (!value) continue;
+
+    if (
+      rawKey === "question" &&
+      (current.question || current.intention || current.answer)
+    ) {
+      normalized.push({ ...current });
+      current = { question: "", intention: "", answer: "" };
+    }
+
+    current[rawKey] = value;
+    i += 1;
+  }
+
+  if (current.question || current.intention || current.answer) {
+    normalized.push(current);
+  }
+
+  return normalized.map((item) => ({
+    question: item.question || "Question",
+    intention: item.intention || "Assess technical skill",
+    answer: item.answer || "Standard industry approach",
+  }));
+};
+
+const parseSkillTokenArray = (tokens) => {
+  if (!Array.isArray(tokens)) return [];
+
+  const normalized = [];
+  let current = { skill: "", severity: "medium" };
+
+  for (let i = 0; i < tokens.length; i += 1) {
+    const rawKey = toText(tokens[i]).toLowerCase();
+    const value = toText(tokens[i + 1]);
+
+    if (!["skill", "severity"].includes(rawKey)) continue;
+    if (!value) continue;
+
+    if (rawKey === "skill" && current.skill) {
+      normalized.push({ ...current });
+      current = { skill: "", severity: "medium" };
+    }
+
+    current[rawKey] = rawKey === "severity" ? value.toLowerCase() : value;
+    i += 1;
+  }
+
+  if (current.skill) {
+    normalized.push(current);
+  }
+
+  return normalized.map((item) => ({
+    skill: item.skill,
+    severity: ["low", "medium", "high"].includes(item.severity)
+      ? item.severity
+      : "medium",
+  }));
+};
 
 const normalizeQuestions = (items) => {
   if (!Array.isArray(items)) return [];
-  return items
+
+  const fromObjects = items
     .filter((item) => item && typeof item === "object" && !Array.isArray(item))
     .map((item) => ({
-      question: toText(item.question || item.Question),
-      intention: toText(item.intention || item.Intention),
-      answer: toText(item.answer || item.Answer),
+      question: toText(item.question),
+      intention: toText(item.intention),
+      answer: toText(item.answer),
     }))
-    .filter((item) => item.question);
+    .filter((item) => item.question || item.intention || item.answer);
+
+  if (fromObjects.length > 0) {
+    const looksTokenized = fromObjects.some((item) =>
+      ["question", "intention", "answer"].includes(
+        toText(item.question).toLowerCase(),
+      ),
+    );
+
+    if (looksTokenized) {
+      const recovered = parseQuestionTokenArray(
+        fromObjects.map((item) => toText(item.question)),
+      );
+      if (recovered.length > 0) return recovered;
+    }
+
+    return fromObjects.map((item) => ({
+      question: item.question || "Question",
+      intention: item.intention || "Assess technical skill",
+      answer: item.answer || "Standard industry approach",
+    }));
+  }
+
+  return parseQuestionTokenArray(items);
 };
-
-// const parseQuestionTokenArray = (tokens) => {
-//   if (!Array.isArray(tokens)) return [];
-
-//   const normalized = [];
-//   let current = { question: "", intention: "", answer: "" };
-
-//   for (let i = 0; i < tokens.length; i += 1) {
-//     const rawKey = toText(tokens[i]).toLowerCase();
-//     const value = toText(tokens[i + 1]);
-
-//     if (!["question", "intention", "answer"].includes(rawKey)) continue;
-//     if (!value) continue;
-
-//     if (
-//       rawKey === "question" &&
-//       (current.question || current.intention || current.answer)
-//     ) {
-//       normalized.push({ ...current });
-//       current = { question: "", intention: "", answer: "" };
-//     }
-
-//     current[rawKey] = value;
-//     i += 1;
-//   }
-
-//   if (current.question || current.intention || current.answer) {
-//     normalized.push(current);
-//   }
-
-//   return normalized.map((item) => ({
-//     question: item.question || "Question",
-//     intention: item.intention || "Assess technical skill",
-//     answer: item.answer || "Standard industry approach",
-//   }));
-// };
-
-// const parseSkillTokenArray = (tokens) => {
-//   if (!Array.isArray(tokens)) return [];
-
-//   const normalized = [];
-//   let current = { skill: "", severity: "medium" };
-
-//   for (let i = 0; i < tokens.length; i += 1) {
-//     const rawKey = toText(tokens[i]).toLowerCase();
-//     const value = toText(tokens[i + 1]);
-
-//     if (!["skill", "severity"].includes(rawKey)) continue;
-//     if (!value) continue;
-
-//     if (rawKey === "skill" && current.skill) {
-//       normalized.push({ ...current });
-//       current = { skill: "", severity: "medium" };
-//     }
-
-//     current[rawKey] = rawKey === "severity" ? value.toLowerCase() : value;
-//     i += 1;
-//   }
-
-//   if (current.skill) {
-//     normalized.push(current);
-//   }
-
-//   return normalized.map((item) => ({
-//     skill: item.skill,
-//     severity: ["low", "medium", "high"].includes(item.severity)
-//       ? item.severity
-//       : "medium",
-//   }));
-// };
-
-// const normalizeQuestions = (items) => {
-//   if (!Array.isArray(items)) return [];
-
-//   const fromObjects = items
-//     .filter((item) => item && typeof item === "object" && !Array.isArray(item))
-//     .map((item) => ({
-//       question: toText(item.question),
-//       intention: toText(item.intention),
-//       answer: toText(item.answer),
-//     }))
-//     .filter((item) => item.question || item.intention || item.answer);
-
-//   if (fromObjects.length > 0) {
-//     const looksTokenized = fromObjects.some((item) =>
-//       ["question", "intention", "answer"].includes(
-//         toText(item.question).toLowerCase(),
-//       ),
-//     );
-
-//     if (looksTokenized) {
-//       const recovered = parseQuestionTokenArray(
-//         fromObjects.map((item) => toText(item.question)),
-//       );
-//       if (recovered.length > 0) return recovered;
-//     }
-
-//     return fromObjects.map((item) => ({
-//       question: item.question || "Question",
-//       intention: item.intention || "Assess technical skill",
-//       answer: item.answer || "Standard industry approach",
-//     }));
-//   }
-
-//   return parseQuestionTokenArray(items);
-// };
-
-// const normalizeSkillGaps = (items) => {
-//   if (!Array.isArray(items)) return [];
-
-//   const fromObjects = items
-//     .filter((item) => item && typeof item === "object" && !Array.isArray(item))
-//     .map((item) => ({
-//       skill: toText(item.skill),
-//       severity: toText(item.severity).toLowerCase(),
-//     }))
-//     .filter((item) => item.skill);
-
-//   if (fromObjects.length > 0) {
-//     const looksTokenized = fromObjects.some((item) =>
-//       ["skill", "severity"].includes(toText(item.skill).toLowerCase()),
-//     );
-
-//     if (looksTokenized) {
-//       const recovered = parseSkillTokenArray(
-//         fromObjects.map((item) => toText(item.skill)),
-//       );
-//       if (recovered.length > 0) return recovered;
-//     }
-
-//     return fromObjects.map((item) => ({
-//       skill: item.skill,
-//       severity: ["low", "medium", "high"].includes(item.severity)
-//         ? item.severity
-//         : "medium",
-//     }));
-//   }
-
-//   return parseSkillTokenArray(items);
-// };
 
 const normalizeSkillGaps = (items) => {
   if (!Array.isArray(items)) return [];
-  return items
+
+  const fromObjects = items
     .filter((item) => item && typeof item === "object" && !Array.isArray(item))
     .map((item) => ({
-      skill: toText(item.skill || item.Skill),
-      severity: toText(item.severity || item.Severity).toLowerCase(),
+      skill: toText(item.skill),
+      severity: toText(item.severity).toLowerCase(),
     }))
     .filter((item) => item.skill);
+
+  if (fromObjects.length > 0) {
+    const looksTokenized = fromObjects.some((item) =>
+      ["skill", "severity"].includes(toText(item.skill).toLowerCase()),
+    );
+
+    if (looksTokenized) {
+      const recovered = parseSkillTokenArray(
+        fromObjects.map((item) => toText(item.skill)),
+      );
+      if (recovered.length > 0) return recovered;
+    }
+
+    return fromObjects.map((item) => ({
+      skill: item.skill,
+      severity: ["low", "medium", "high"].includes(item.severity)
+        ? item.severity
+        : "medium",
+    }));
+  }
+
+  return parseSkillTokenArray(items);
 };
 
 const parsePlansFromArray = (values) => {
@@ -413,137 +380,115 @@ const chunkLegacySingleDayPlan = (dayItem) => {
   return chunks;
 };
 
-// const normalizePreparationPlan = (reportData) => {
-//   const collected = [];
-
-//   if (Array.isArray(reportData?.preparationPlan)) {
-//     const objectItems = reportData.preparationPlan.filter(
-//       (item) => item && typeof item === "object" && !Array.isArray(item),
-//     );
-
-//     if (objectItems.length > 0) {
-//       const tokenStream = objectItems
-//         .filter((item) => Array.isArray(item.tasks) && item.tasks.length > 0)
-//         .map((item) => toText(item.tasks[0]))
-//         .filter(Boolean);
-
-//       const looksTokenized = tokenStream.some((token) =>
-//         ["day", "focus", "tasks"].includes(token.toLowerCase()),
-//       );
-
-//       if (looksTokenized) {
-//         collected.push(...parsePlansFromArray(tokenStream));
-//       }
-
-//       objectItems.forEach((item, index) => {
-//         const safeTasks = Array.isArray(item.tasks)
-//           ? item.tasks.map((task) => toText(task)).filter(Boolean)
-//           : toText(item.tasks)
-//             ? [toText(item.tasks)]
-//             : [];
-
-//         const cleanedTasks = cleanTaskList(safeTasks);
-//         const rawTokens = safeTasks.map((task) => task.toLowerCase());
-
-//         const normalizedDay = {
-//           day: Number(item.day) || index + 1,
-//           focus: toText(item.focus) || "Interview Prep",
-//           tasks:
-//             cleanedTasks.length > 0
-//               ? cleanedTasks
-//               : ["Complete preparation tasks for this day."],
-//         };
-
-//         const isLikelyBrokenLegacyItem =
-//           normalizedDay.focus === "Interview Prep" &&
-//           (rawTokens.length === 0 ||
-//             rawTokens.every(
-//               (token) =>
-//                 ["day", "focus", "tasks"].includes(token) ||
-//                 /^\d+$/.test(token),
-//             ));
-
-//         if (!isLikelyBrokenLegacyItem) {
-//           collected.push(normalizedDay);
-//         }
-//       });
-//     } else {
-//       collected.push(...parsePlansFromArray(reportData.preparationPlan));
-//     }
-//   }
-
-//   if (reportData?.day || reportData?.focus || reportData?.tasks) {
-//     const cleanedTasks = cleanTaskList(reportData.tasks);
-
-//     collected.push({
-//       day: Number(reportData.day) || collected.length + 1,
-//       focus: toText(reportData.focus) || "Interview Prep",
-//       tasks:
-//         cleanedTasks.length > 0
-//           ? cleanedTasks
-//           : ["Complete preparation tasks for this day."],
-//     });
-//   }
-
-//   Object.values(reportData || {}).forEach((value) => {
-//     const parsedPlans = parsePlansFromArray(value);
-//     if (parsedPlans.length > 0) {
-//       collected.push(...parsedPlans);
-//     }
-//   });
-
-
-//   const byDay = new Map();
-//   collected.forEach((item) => {
-//     const existing = byDay.get(item.day);
-//     if (!existing) {
-//       byDay.set(item.day, item);
-//       return;
-//     }
-
-//     const mergedTasks = [...existing.tasks, ...item.tasks].filter(Boolean);
-//     byDay.set(item.day, {
-//       day: item.day,
-//       focus: existing.focus === "Interview Prep" ? item.focus : existing.focus,
-//       tasks: [...new Set(mergedTasks)],
-//     });
-//   });
-
-//   const sorted = [...byDay.values()].sort((a, b) => a.day - b.day);
-
-//   if (sorted.length === 1) {
-  //     const expanded = chunkLegacySingleDayPlan(sorted[0]);
-  //     return expanded.map((item, index) => ({
-    //       ...item,
-    //       day: index + 1,
-//     }));
-//   }
-
-//   return sorted.map((item, index) => ({
-//     ...item,
-//     day: index + 1,
-//   }));
-// };
-
-// const normalizeReport = (reportData) => ({
-//   ...reportData,
-//   technicalQuestions: normalizeQuestions(reportData?.technicalQuestions),
-//   behavioralQuestions: normalizeQuestions(reportData?.behavioralQuestions),
-//   skillGaps: normalizeSkillGaps(reportData?.skillGaps),
-//   preparationPlan: normalizePreparationPlan(reportData),
-// });
-
 const normalizePreparationPlan = (reportData) => {
-  if (!Array.isArray(reportData?.preparationPlan)) return [];
-  
-  return reportData.preparationPlan
-    .filter((item) => item && typeof item === "object" && !Array.isArray(item))
-    .map((item, index) => ({
-      day: Number(item.day) || index + 1,
-      focus: toText(item.focus || item.Focus || "Interview Prep"),
-      tasks: cleanTaskList(item.tasks || item.Tasks),
-    }))
-    .sort((a, b) => a.day - b.day);
+  const collected = [];
+
+  if (Array.isArray(reportData?.preparationPlan)) {
+    const objectItems = reportData.preparationPlan.filter(
+      (item) => item && typeof item === "object" && !Array.isArray(item),
+    );
+
+    if (objectItems.length > 0) {
+      const tokenStream = objectItems
+        .filter((item) => Array.isArray(item.tasks) && item.tasks.length > 0)
+        .map((item) => toText(item.tasks[0]))
+        .filter(Boolean);
+
+      const looksTokenized = tokenStream.some((token) =>
+        ["day", "focus", "tasks"].includes(token.toLowerCase()),
+      );
+
+      if (looksTokenized) {
+        collected.push(...parsePlansFromArray(tokenStream));
+      }
+
+      objectItems.forEach((item, index) => {
+        const safeTasks = Array.isArray(item.tasks)
+          ? item.tasks.map((task) => toText(task)).filter(Boolean)
+          : toText(item.tasks)
+            ? [toText(item.tasks)]
+            : [];
+
+        const cleanedTasks = cleanTaskList(safeTasks);
+        const rawTokens = safeTasks.map((task) => task.toLowerCase());
+
+        const normalizedDay = {
+          day: Number(item.day) || index + 1,
+          focus: toText(item.focus) || "Interview Prep",
+          tasks:
+            cleanedTasks.length > 0
+              ? cleanedTasks
+              : ["Complete preparation tasks for this day."],
+        };
+
+        const isLikelyBrokenLegacyItem =
+          normalizedDay.focus === "Interview Prep" &&
+          (rawTokens.length === 0 ||
+            rawTokens.every(
+              (token) =>
+                ["day", "focus", "tasks"].includes(token) ||
+                /^\d+$/.test(token),
+            ));
+
+        if (!isLikelyBrokenLegacyItem) {
+          collected.push(normalizedDay);
+        }
+      });
+    } else {
+      collected.push(...parsePlansFromArray(reportData.preparationPlan));
+    }
+  }
+
+  if (reportData?.day || reportData?.focus || reportData?.tasks) {
+    const cleanedTasks = cleanTaskList(reportData.tasks);
+
+    collected.push({
+      day: Number(reportData.day) || collected.length + 1,
+      focus: toText(reportData.focus) || "Interview Prep",
+      tasks:
+        cleanedTasks.length > 0
+          ? cleanedTasks
+          : ["Complete preparation tasks for this day."],
+    });
+  }
+
+  Object.values(reportData || {}).forEach((value) => {
+    const parsedPlans = parsePlansFromArray(value);
+    if (parsedPlans.length > 0) {
+      collected.push(...parsedPlans);
+    }
+  });
+
+  const byDay = new Map();
+  collected.forEach((item) => {
+    const existing = byDay.get(item.day);
+    if (!existing) {
+      byDay.set(item.day, item);
+      return;
+    }
+
+    const mergedTasks = [...existing.tasks, ...item.tasks].filter(Boolean);
+    byDay.set(item.day, {
+      day: item.day,
+      focus: existing.focus === "Interview Prep" ? item.focus : existing.focus,
+      tasks: [...new Set(mergedTasks)],
+    });
+  });
+
+  const sorted = [...byDay.values()].sort((a, b) => a.day - b.day);
+
+  if (sorted.length === 1) {
+    const expanded = chunkLegacySingleDayPlan(sorted[0]);
+    return expanded.map((item, index) => ({
+      ...item,
+      day: index + 1,
+    }));
+  }
+
+  return sorted.map((item, index) => ({
+    ...item,
+    day: index + 1,
+  }));
 };
 
 const normalizeReport = (reportData) => ({
